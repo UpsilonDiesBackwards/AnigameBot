@@ -49,7 +49,7 @@ func main() {
 				"Type 'stop', 'exit' to exit the CLI and stop the Bot\n")
 		case "start", "auto":
 			fmt.Printf("\nStarting...\n")
-			running = true
+			// TODO: Initiate battle sequence
 		case "stop", "exit":
 			fmt.Printf("\nStopping...\n")
 			running = false
@@ -117,45 +117,46 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if len(msg) > 0 {
 		embeds := msg[0].Embeds
 
+		// Reply to Anigame test command
 		if msg[0].Content == "done." {
-			context.discord.ChannelMessageSend(m.ChannelID, strconv.Itoa(context.gameContext.currentLocation))
-			context.discord.ChannelMessageSend(m.ChannelID, strconv.Itoa(context.gameContext.currentFloor))
+			_, _ = context.discord.ChannelMessageSend(m.ChannelID, strconv.Itoa(context.gameContext.currentLocation))
+			_, _ = context.discord.ChannelMessageSend(m.ChannelID, strconv.Itoa(context.gameContext.currentFloor))
 		}
 
+		// Check for embeds
 		if len(embeds) > 0 {
 			fmt.Println(embeds[0].Title)
 
 			if strings.Contains(embeds[0].Title, "Travelled to") { // Start Battle
-				context.discord.ChannelMessageSend(m.ChannelID, ".battle")
+				_, _ = context.discord.ChannelMessageSend(m.ChannelID, ".battle")
 			}
 
 			if embeds[0].Title == "**Victory <a:CHEER:705920932677681253>**" { // Progress to next Level if possible
 				fmt.Println("Battle Won")
-				context.discord.ChannelMessageSend(m.ChannelID, ".fl next")
+				_, _ = context.discord.ChannelMessageSend(m.ChannelID, ".fl next")
 			}
 
 			if strings.Contains(embeds[0].Description, "area ID you would like to go to.") { // Progress to next loc
 				context.gameContext.currentLocation += 1
 				_, err := context.discord.ChannelMessageSend(m.ChannelID, ".loc "+strconv.Itoa(context.gameContext.currentLocation))
 				if err != nil {
-					println("Invalid location number!")
+					fmt.Println("Invalid location number!")
 					return
 				}
 			}
 
 			if strings.Contains(embeds[0].Title, "Successfully travelled to") { // Battle if travelled to next loc
-				context.discord.ChannelMessageSend(m.ChannelID, ".battle")
+				_, _ = context.discord.ChannelMessageSend(m.ChannelID, ".battle")
 			}
 
 			if strings.Contains(embeds[0].Description, "You do not have enough stamina to proceed!") {
 				fmt.Println("\nInsufficient Stamina! Waiting for 30 Minutes before battling again.")
 				time.Sleep(30 * time.Minute) // wait for n Minutes
 				fmt.Println("\nAssuming Stamina is full. Battling Resumed.")
-				context.discord.ChannelMessageSend(m.ChannelID, ".battle")
+				_, _ = context.discord.ChannelMessageSend(m.ChannelID, ".battle")
 			}
 
 			// When the bot initiates a battle, strip the Title and get the current Loc and Floor numbers
-
 			if strings.Contains(embeds[0].Title, "Challenging Floor") {
 				s := stripFormattingCharacters(embeds[0].Title)
 				sr := strings.Split(s, " ")       // Split the string into segments on basis of whitespaces
@@ -173,11 +174,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					return
 				}
 			}
-
 		}
 	}
 }
 
+// stripFormattingCharacters removes formatting characters, such as the ones used to create bold or italic text,
+// from input and returns the sanitised string.
 func stripFormattingCharacters(input string) string {
 	input = strings.ReplaceAll(input, "__", "")
 	input = strings.ReplaceAll(input, "**", "")
