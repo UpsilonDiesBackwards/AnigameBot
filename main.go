@@ -132,8 +132,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 			if embeds[0].Title == "**Victory <a:CHEER:705920932677681253>**" { // Progress to next Level if possible
-				fmt.Println("Battle Won")
+				fmt.Println("Battle Won, progressing to next floor")
 				_, _ = context.discord.ChannelMessageSend(m.ChannelID, ".fl next")
+			}
+
+			if strings.Contains(embeds[0].Title, "Defeated :CRY:") {
+				fmt.Println("Battle Lost, trying again")
+				_, _ = context.discord.ChannelMessageSend(m.ChannelID, ".battle")
 			}
 
 			if strings.Contains(embeds[0].Description, "area ID you would like to go to.") { // Progress to next loc
@@ -149,6 +154,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				_, _ = context.discord.ChannelMessageSend(m.ChannelID, ".battle")
 			}
 
+			// TODO: Multiple sleep events depending on how depleted stamina is
 			if strings.Contains(embeds[0].Description, "You do not have enough stamina to proceed!") {
 				fmt.Println("\nInsufficient Stamina! Waiting for 30 Minutes before battling again.")
 				time.Sleep(30 * time.Minute) // wait for n Minutes
